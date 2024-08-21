@@ -51,7 +51,7 @@ def get_latest_data():
     }, rows
 
 # Streamlitの表示
-st.title("Observed Temperature")
+st.title("Room Temperature")
 
 # get_latest_data関数からlatest_dataとrowsを取得
 latest_data, rows = get_latest_data()
@@ -95,7 +95,7 @@ if rows:
     plt.title("Temperature over the last 6 hours", fontsize=14)  # タイトルのフォントサイズを大きく設定
 
     # x軸のラベルを30分おきに設定し、書式をYYYY/MM/DD HH:MMに設定
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y/%m/%d %H:%M'))
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y %H:%M'))
     plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(byminute=[0, 30]))  # 00分と30分ごとにラベルを設定
 
     # ラベルを回転させて表示
