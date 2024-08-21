@@ -3,6 +3,10 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 from dotenv import load_dotenv
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+import matplotlib.dates as mdates
 
 # .envファイルの読み込み
 load_dotenv()
@@ -37,22 +41,72 @@ def get_latest_data():
     rows = sheet.get_all_values()
 
     if not rows:
-        return None
+        return None, None
 
     latest_data = rows[-1]  # 最新の行を取得
     return {
         "date": latest_data[0],
         "time": latest_data[1],
         "temperature": latest_data[2]
-    }
+    }, rows
 
 # Streamlitの表示
 st.title("Observed Temperature")
 
-latest_data = get_latest_data()
+# get_latest_data関数からlatest_dataとrowsを取得
+latest_data, rows = get_latest_data()
+
 if latest_data:
     st.markdown(f"<span style='font-size:24px;'>Date: {latest_data['date']}</span>", unsafe_allow_html=True)
     st.markdown(f"<span style='font-size:24px;'>Time: {latest_data['time']}</span>", unsafe_allow_html=True)
     st.markdown(f"<span style='font-size:24px;'>Temperature: {latest_data['temperature']}°C</span>", unsafe_allow_html=True)
 else:
     st.error("No data found.")
+    
+#####
+
+if rows:
+    # 最新のデータから72個分のデータを取得（約6時間分）
+    data_to_plot = rows[-72:]
+
+    # データをDataFrameに変換
+    df = pd.DataFrame(data_to_plot, columns=["Date", "Time", "Temperature"])
+
+    # 'Temperature'をfloatに変換
+    df["Temperature"] = df["Temperature"].astype(float)
+
+    # 'Date'と'Time'を結合してdatetime型に変換
+    df["Datetime"] = pd.to_datetime(df["Date"] + " " + df["Time"])
+
+    # 折れ線グラフを作成
+    plt.figure(figsize=(10, 5))
+    plt.plot(df["Datetime"], df["Temperature"], marker="o", color="orange", label="Temperature (°C)")
+
+    # 目印の線を追加
+    plt.axhline(y=28, color="red", linestyle="--", label="Upper value (28°C)")
+    plt.axhline(y=20, color="blue", linestyle="--", label="Lower value (20°C)")
+
+    # グリッド線の追加
+    plt.grid(True)
+
+    # グラフのラベル設定
+    plt.xlabel("Time", fontsize=12)  # フォントサイズを大きく設定
+    plt.ylabel("Temperature (°C)", fontsize=12)  # フォントサイズを大きく設定
+    plt.title("Temperature over the last 6 hours", fontsize=14)  # タイトルのフォントサイズを大きく設定
+
+    # x軸のラベルを30分おきに設定し、書式をYYYY/MM/DD HH:MMに設定
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y/%m/%d %H:%M'))
+    plt.gca().xaxis.set_major_locator(mdates.MinuteLocator(byminute=[0, 30]))  # 00分と30分ごとにラベルを設定
+
+    # ラベルを回転させて表示
+    plt.xticks(rotation=45, ha="right", fontsize=10)  # x軸のフォントサイズを大きく設定
+    plt.yticks(fontsize=10)  # y軸のフォントサイズを大きく設定
+
+    # 凡例を追加
+    plt.legend(loc="upper right", fontsize=10)
+
+    # グラフの表示
+    plt.tight_layout()  # レイアウトを調整
+    st.pyplot(plt)
+else:
+    st.warning("No historical data available for plotting.")
