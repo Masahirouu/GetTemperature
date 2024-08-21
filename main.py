@@ -51,8 +51,8 @@ st.title("Observed Temperature")
 
 latest_data = get_latest_data()
 if latest_data:
-    st.write(f"Date: {latest_data['date']}")
-    st.write(f"Time: {latest_data['time']}")
-    st.write(f"Temperature: {latest_data['temperature']}°C")
+    st.markdown(f"<span style='font-size:24px;'>Date: {latest_data['date']}</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='font-size:24px;'>Time: {latest_data['time']}</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='font-size:24px;'>Temperature: {latest_data['temperature']}°C</span>", unsafe_allow_html=True)
 else:
     st.error("No data found.")
